@@ -1,113 +1,188 @@
-document.getElementById("analyzeButton").addEventListener("click", function () {
-    let file = document.getElementById("fileInput").files[0];
-    if (!file) {
-        alert("Por favor, sube un archivo CSV o JSON.");
-        return;
-    }
+let originalRows = [];
+let labels = [];
+let dataset = [];
+let lineChart, barChart, pieChart;
 
-    let reader = new FileReader();
-    reader.onload = function (e) {
-        let content = e.target.result;
+document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        if (file.name.endsWith(".csv")) {
-            parseCSV(content); 
-        } else if (file.name.endsWith(".json")) {
-            parseJSON(content);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        if (file.name.endsWith('.csv')) {
+            processCSV(content);
+        } else if (file.name.endsWith('.json')) {
+            processJSON(content);
         } else {
-            alert("Formato no válido. Solo CSV o JSON son permitidos.");
+            alert('Formato no soportado');
         }
     };
     reader.readAsText(file);
 });
 
-function parseCSV(csvText) {
-    let rows = csvText.split("\n").map(row => row.split(","));
-    if (rows.length < 2) {
-        alert("No se encontraron datos en el archivo CSV.");
-        return;
-    }
-    createTable(rows[0], rows.slice(1));
+function processCSV(content) {
+    const rows = content.trim().split('\n').map(row => row.split(','));
+    originalRows = rows;
+    generateTable(rows);
+    loadCharts(rows);
 }
 
-function parseJSON(jsonText) {
-    let data = JSON.parse(jsonText);
-    if (!Array.isArray(data) || data.length === 0) {
-        alert("El archivo JSON no contiene datos válidos.");
-        return;
-    }
-
-    let headers = Object.keys(data[0]);
-    let rows = data.map(obj => headers.map(header => obj[header]));
-
-    createTable(headers, rows);
+function processJSON(content) {
+    const data = JSON.parse(content);
+    const keys = Object.keys(data[0]);
+    const rows = [keys, ...data.map(obj => keys.map(key => obj[key]))];
+    originalRows = rows;
+    generateTable(rows);
+    loadCharts(rows);
 }
 
-function createTable(headers, rows) {
-    let tableHeader = document.getElementById("tableHeader");
-    let tableBody = document.getElementById("tableBody");
-
-    tableHeader.innerHTML = "";
-    tableBody.innerHTML = "";
-
-    headers.forEach((header, index) => {
-        let th = document.createElement("th");
-        th.textContent = header;
-        th.addEventListener("click", () => sortTable(index)); // Añade funcionalidad de ordenación
-        tableHeader.appendChild(th);
-    });
-
-    rows.forEach(row => {
-        let tr = document.createElement("tr");
-        row.forEach(cellData => {
-            let td = document.createElement("td");
-            td.textContent = cellData;
+function generateTable(rows) {
+    const table = document.getElementById('dataTable');
+    table.innerHTML = '';
+    rows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+            const td = document.createElement(index === 0 ? 'th' : 'td');
+            td.textContent = cell;
             tr.appendChild(td);
         });
-        tableBody.appendChild(tr);
-    });
-
-    document.getElementById("searchInput").addEventListener("input", function () {
-        filterTable(rows, headers);
+        table.appendChild(tr);
     });
 }
 
-function filterTable(rows, headers) {
-    let filter = document.getElementById("searchInput").value.toLowerCase();
-    let tableBody = document.getElementById("tableBody");
-    let filteredRows = rows.filter(row => row.some(cell => cell.toLowerCase().includes(filter)));
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('valueFilter').addEventListener('input', applyFilters);
 
-    tableBody.innerHTML = "";
-    rows.forEach(row => {
-        let isMatch = row.some(cell => cell.toLowerCase().includes(filter));
-        if (isMatch) {
-            let tr = document.createElement("tr");
-            row.forEach(cellData => {
-                let td = document.createElement("td");
-                td.textContent = cellData;
-                tr.appendChild(td);
-            });
-            tableBody.appendChild(tr);
+function applyFilters() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const minValue = parseFloat(document.getElementById('valueFilter').value);
+    const headers = originalRows[0];
+    const rows = originalRows.slice(1).filter(row => {
+        const matchesText = row.some(cell => cell.toLowerCase().includes(query));
+        const valueCheck = isNaN(minValue) || parseFloat(row[1]) >= minValue;
+        return matchesText && valueCheck;
+    });
+    const filtered = [headers, ...rows];
+    generateTable(filtered);
+    loadCharts(filtered);
+}
+
+function loadCharts(rows) {
+    if (!rows || rows.length < 2) return;
+
+    labels = rows.slice(1).map(r => r[0]);
+    dataset = rows.slice(1).map(r => parseFloat(r[1]));
+    const trend = calculateTrendline(labels, dataset);
+
+    if (lineChart) lineChart.destroy();
+    if (barChart) barChart.destroy();
+    if (pieChart) pieChart.destroy();
+
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
+    const ctxBar = document.getElementById('barChart').getContext('2d');
+    const ctxPie = document.getElementById('pieChart').getContext('2d');
+
+    lineChart = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Valores',
+                    data: dataset,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0,128,0,0.1)',
+                    tension: 0.3
+                },
+                {
+                    label: 'Tendencia',
+                    data: trend,
+                    borderColor: 'red',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const i = elements[0].index;
+                    alert(`Etiqueta: ${labels[i]}\nValor: ${dataset[i]}`);
+                }
+            }
+        }
+    });
+
+    barChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Valores',
+                data: dataset,
+                backgroundColor: 'rgba(0,128,0,0.7)',
+                borderColor: '#006400',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    pieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Distribución',
+                data: dataset,
+                backgroundColor: labels.map(() => randomColor())
+            }]
+        },
+        options: {
+            responsive: true
         }
     });
 }
 
-function sortTable(columnIndex) {
-    let tableBody = document.getElementById("tableBody");
-    let rows = Array.from(tableBody.rows);
-    let isAscending = tableBody.dataset.sortColumn === columnIndex && tableBody.dataset.sortOrder === "asc";
+function calculateTrendline(labels, data) {
+    const n = data.length;
+    const sumX = labels.reduce((sum, _, i) => sum + i, 0);
+    const sumY = data.reduce((sum, y) => sum + y, 0);
+    const sumXY = data.reduce((sum, y, i) => sum + i * y, 0);
+    const sumX2 = labels.reduce((sum, _, i) => sum + i * i, 0);
 
-    rows.sort((a, b) => {
-        let cellA = a.cells[columnIndex].textContent.trim();
-        let cellB = b.cells[columnIndex].textContent.trim();
-        
-        if (cellA < cellB) return isAscending ? 1 : -1;
-        if (cellA > cellB) return isAscending ? -1 : 1;
-        return 0;
-    });
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
 
-    tableBody.innerHTML = "";
-    rows.forEach(row => tableBody.appendChild(row));
+    return labels.map((_, i) => slope * i + intercept);
+}
 
-    tableBody.dataset.sortColumn = columnIndex;
-    tableBody.dataset.sortOrder = isAscending ? "desc" : "asc";
+function randomColor() {
+    const r = Math.floor(Math.random() * 180);
+    const g = Math.floor(Math.random() * 180);
+    const b = Math.floor(Math.random() * 180);
+    return `rgb(${r},${g},${b})`;
+}
+
+function exportChartAsImage(chartId) {
+    const canvas = document.getElementById(chartId);
+    const link = document.createElement('a');
+    link.download = chartId + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+function exportChartAsPDF(chartId) {
+    const canvas = document.getElementById(chartId);
+    const image = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (canvas.height / canvas.width) * width;
+    pdf.addImage(image, 'PNG', 10, 10, width - 20, height);
+    pdf.save(chartId + '.pdf');
 }
