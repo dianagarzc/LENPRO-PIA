@@ -1,3 +1,4 @@
+/* ==== ESTILO GENERAL DE LA PÁGINA ==== */
 body {
     font-family: 'Segoe UI', Tahoma, sans-serif;
     background-color: #e8e8e8;
@@ -8,8 +9,10 @@ body {
     align-items: center;
     flex-direction: column;
     min-height: 60vh;
+    color: #333;
 }
 
+/* ==== TÍTULOS ==== */
 h1 {
     color: #446741;
     margin-bottom: 20px;
@@ -25,12 +28,15 @@ h2 {
     margin-bottom: 20px;
 }
 
+/* ==== TABLA ==== */
 table {
     width: 75%;
     margin: 30px 0;
     border-collapse: collapse;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 th, td {
@@ -73,9 +79,10 @@ tr:last-child td:last-child {
     border-bottom-right-radius: 8px;
 }
 
+/* ==== BOTONES GENERALES ==== */
 button {
     background-color: #446741;
-    color: rgb(255, 255, 255);
+    color: #fff;
     padding: 10px 20px;
     border: 1px solid #5e5c5c;
     border-radius: 4px;
@@ -90,6 +97,28 @@ button:hover {
     transform: scale(1.05);
 }
 
+/* ==== BOTONES DE EXPORTACIÓN ==== */
+button.export-btn {
+    margin: 5px 10px;
+    padding: 8px 12px;
+    background-color: #446741;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button.export-btn:hover {
+    background-color: #5f905a;
+}
+
+.export-buttons {
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* ==== INPUTS ==== */
 input {
     margin: 10px 5px;
     padding: 15px;
@@ -104,4 +133,25 @@ input {
 
 input[type="text"] {
     width: 30%;
+}
+
+/* ==== SECCIÓN DE FILTRO ==== */
+#filterSection {
+    margin-bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* ==== CANVAS ==== */
+canvas {
+    margin-top: 30px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 90%;
 }
