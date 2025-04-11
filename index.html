@@ -1,32 +1,45 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="styles.css">
-        <title>Aplicación de Análisis de Datos</title>
-    </head>
-    <body>
-        <h1>Analizador de datos</h1>
-        <h2>Sube un archivo .CSV o .JSON para analizarlo.</h2>
-        <input type="file" id="fileInput" accept=".csv, .json">
-        
-        <button 
-            id="analyzeButton">Analizar
-        </button>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizador de Datos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Analizador de Datos</h1>
+  <h2>Sube un archivo .CSV o .JSON para analizarlo</h2>
 
-        <br><br>
-        <input type="text" id="searchInput" placeholder="Buscar en tabla">
+  <input type="file" id="fileInput" accept=".csv, .json">
 
-        <div id="output"></div>
+  <div id="filtersSection">
+    <input type="text" id="searchInput" placeholder="Buscar en tabla">
+    <button id="searchButton">Buscar</button>
+    <select id="filterOptions">
+      <option value="none">-- Selecciona Filtro --</option>
+      <option value="sortAsc">Ordenar de menor a mayor</option>
+      <option value="sortDesc">Ordenar de mayor a menor</option>
+      <option value="specificValue">Filtrar por valor específico</option>
+    </select>
+  </div>
 
-        <table id="dataTable">
-            <thead>
-                <tr id="tableHeader"></tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+  <table id="dataTable">
+    <thead><tr id="tableHeader"></tr></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
 
-        <script src="script.js"></script>
-    </body>
+  <div id="chartSection">
+    <canvas id="lineChart"></canvas>
+    <button class="export-btn" onclick="exportChartAsImage('lineChart')">Exportar Línea</button>
+
+    <canvas id="barChart"></canvas>
+    <button class="export-btn" onclick="exportChartAsImage('barChart')">Exportar Barras</button>
+
+    <canvas id="pieChart"></canvas>
+    <button class="export-btn" onclick="exportChartAsImage('pieChart')">Exportar Pastel</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
