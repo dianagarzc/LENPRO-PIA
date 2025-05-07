@@ -114,20 +114,20 @@ button:hover {
 
 .chart-container {
     position: relative;
-    width: 50%;
+    width: 90%;
     max-width: 700px;
     height: 400px;
     margin: 30px auto;
 }
 
 canvas {
-    width: 100% !important;
-    height: 100% !important;
+    width: 80% !important;
+    height: 60% !important;
     background: white;
     padding: 10px;
     border-radius: 8px;
     display: block;
-    margin: 40px auto;
+    margin: 50px auto;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
